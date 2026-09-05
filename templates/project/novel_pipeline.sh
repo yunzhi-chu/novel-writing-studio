@@ -16,10 +16,9 @@
 # 依赖：oMLX(:8000) 已启动并加载 Ornith-1.5-35B-A3B-MLX-8bit；
 #       nest_drama_run.sh（自动拉起 nest-drama 引擎 :8790）
 # ============================================================
-set -uo pipefail
-
 # 统一配置（~/.novel/env，可按需修改）
 [ -f "$HOME/.novel/env" ] && . "$HOME/.novel/env"
+set -uo pipefail
 
 NP="$(cd "$(dirname "$0")" && pwd)"
 RUN="${NP}/nest_drama_run.sh"
