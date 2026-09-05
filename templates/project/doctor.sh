@@ -42,11 +42,13 @@ fi
 
 # ---------- 3. 模型可路由 ----------
 echo ""; echo "[3/6] 模型可路由"
-MODELS_JSON=$(curl -s -m 8 "http://127.0.0.1:8000/v1/models" 2>/dev/null)
+# 读配置拿 key（模型列表接口可能要求鉴权）
+if [ -f "$HOME/.novel/env" ]; then
+  . "$HOME/.novel/env"
+fi
+DK="${NEST_LLM_API_KEY:-${LLM_API_KEY:-sk-omlx-local}}"
+MODELS_JSON=$(curl -s -m 8 -H "Authorization: Bearer $DK" "http://127.0.0.1:8000/v1/models" 2>/dev/null)
 if [ -n "$MODELS_JSON" ]; then
-  if [ -f "$HOME/.novel/env" ]; then
-    . "$HOME/.novel/env"
-  fi
   WRITE="${LLM_MODEL:-}"
   NEST="${NEST_LLM_MODEL:-}"
   [ -z "$WRITE" ] && WRITE="Qwen3.6-35B-A3B-MLX-8bit"
