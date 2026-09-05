@@ -1,5 +1,8 @@
 # 🖋️ AI 小说写作工作台
 
+[![Download v1.0.0](https://img.shields.io/badge/Download%20v1.0.0-2ea44f?style=for-the-badge&logo=github&logoColor=white)](https://github.com/yunzhi-chu/novel-writing-studio/releases/tag/v1.0.0)
+[![Release](https://img.shields.io/github/v/release/yunzhi-chu/novel-writing-studio?style=flat-square&label=最新版本)](https://github.com/yunzhi-chu/novel-writing-studio/releases)
+
 > 一条命令，在你自己电脑上搭起一个「导演 + 写手」的 AI 小说工作室。
 > 角色自主推演剧情 → 自动提炼分镜 → 本地大模型成章（每章约 3000 字）→ 创作看板自动更新。
 
