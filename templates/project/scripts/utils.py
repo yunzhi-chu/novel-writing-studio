@@ -21,6 +21,26 @@ def configure_utf8_stdio():
                 pass
 
 
+def load_env_file(path: Optional[str] = None) -> None:
+    """
+    加载 ~/.novel/env 到 os.environ（已存在的变量不覆盖）。
+    使 python 脚本直接运行时也能读到统一配置，不依赖 .sh 的 source。
+    """
+    p = Path(path) if path else Path.home() / ".novel" / "env"
+    if not p.exists():
+        return
+    try:
+        for line in p.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, _, v = line.partition("=")
+            v = v.strip().strip('"').strip("'")
+            os.environ.setdefault(k.strip(), v)
+    except Exception:
+        pass
+
+
 # ============================================================
 # 路径工具
 # ============================================================
@@ -174,6 +194,7 @@ def get_llm_config() -> dict:
     返回: {"base_url": str, "api_key": str, "model": str}
     """
     config = load_config()
+    load_env_file()  # 直接跑 python 时也加载 ~/.novel/env 统一配置
     base_url = os.environ.get("LLM_BASE_URL", "http://localhost:18083/v1")
     api_key = os.environ.get("LLM_API_KEY", "local")
     model = os.environ.get("LLM_MODEL") or config.get("model_name", "default-model")

@@ -1,6 +1,6 @@
 # 🖋️ AI 小说写作工作台
 
-[![Download v1.0.0](https://img.shields.io/badge/Download%20v1.0.0-2ea44f?style=for-the-badge&logo=github&logoColor=white)](https://github.com/yunzhi-chu/novel-writing-studio/releases/tag/v1.0.0)
+[![Download v1.2.0](https://img.shields.io/badge/Download%20v1.2.0-2ea44f?style=for-the-badge&logo=github&logoColor=white)](https://github.com/yunzhi-chu/novel-writing-studio/releases/tag/v1.2.0)
 [![Release](https://img.shields.io/github/v/release/yunzhi-chu/novel-writing-studio?style=flat-square&label=最新版本)](https://github.com/yunzhi-chu/novel-writing-studio/releases)
 
 > 一条命令，在你自己电脑上搭起一个「导演 + 写手」的 AI 小说工作室。
@@ -35,7 +35,8 @@ cd ~/novel-project
 | 写一章 | 给一句话想法 | 自动生成 3000 字正文，自动续写补足、查设定冲突、审查修订、更新记忆、刷新看板、同步到桌面 |
 | 剧情走向没想好 | 说"让角色自己演" | nest-drama 引擎让角色按各自性格自主推演几轮，导出「故事全录」 |
 | 从推演到成章一条龙 | 跑一条命令 | 推演 → 自动提炼分镜 idea → 直接成章 |
-| 换新故事 | 改 3 个记忆文件 | 从零开始新书的写作循环 |
+| 换新故事 | 跑 `./new_story.sh` | 交互式建新故事，自动生成世界启动卡（时代/势力/主角表单/知情边界）+ 世界观/人物/大纲骨架 |
+| 怕角色崩、文风 AI 味 | 无需操作 | 写手与导演自动遵守 `WRITING_SYSTEM.md` 铁律：禁崩线、对话字面留白、去 AI 文风十条、守界细则 |
 
 ## 🖥️ 支持的系统（自动适配，无需手动选）
 

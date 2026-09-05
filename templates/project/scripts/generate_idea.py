@@ -18,6 +18,28 @@ import os
 import re
 import sys
 import urllib.request
+import yaml
+
+
+def _load_env_file() -> None:
+    """直接跑 python 时也加载 ~/.novel/env 统一配置（已存在的变量不覆盖）。"""
+    p = os.path.expanduser("~/.novel/env")
+    if not os.path.exists(p):
+        return
+    try:
+        with open(p, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                k, _, v = line.partition("=")
+                os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+    except Exception:
+        pass
+
+
+_load_env_file()
+
 from datetime import datetime
 from pathlib import Path
 
@@ -47,6 +69,21 @@ def read_tail(path, tail_chars):
     if len(txt) <= tail_chars:
         return txt
     return txt[-tail_chars:]
+
+
+def book_title() -> str:
+    """从 story_bible 读书名（无则回退到大纲标题，再回退通用名）。"""
+    for p in (NP / "memory" / "story_bible.yaml", NP / "outlines" / "book_outline.yaml"):
+        try:
+            if p.exists():
+                d = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
+                t = d.get("title")
+                if t:
+                    return str(t).strip()
+        except Exception:
+            pass
+    return "未命名"
+
 
 
 def outline_ctx():
@@ -89,12 +126,8 @@ def call_llm(system, user, max_tokens=3000, timeout=300):
         ],
         "temperature": 0.7,
         "max_tokens": max_tokens,
+        "chat_template_kwargs": {"enable_thinking": False},
     }
-    # 后端适配：oMLX(MLX) 用 chat_template_kwargs 关思考；Ollama(GGUF) 用顶层 enable_thinking
-    if os.environ.get("LLM_BACKEND", "omlx") == "ollama":
-        payload["enable_thinking"] = False
-    else:
-        payload["chat_template_kwargs"] = {"enable_thinking": False}
     req = urllib.request.Request(
         url,
         data=json.dumps(payload).encode("utf-8"),
@@ -148,10 +181,15 @@ def main():
     log("模型：%s｜建议章节 ID：%s-标题（可改）" % (MODEL, cid))
 
     system = (
-        "你是长篇现实主义小说《桥下的人》的策划导演兼编剧。"
+        "你是长篇现实主义小说《%s》的策划导演兼编剧。"
         "你从群像推演产出的故事全录里，挑出'有戏、可拍'的片段，"
         "为下一章做导演级分镜规划。只输出分镜式 idea 本身，不要解释。"
-    )
+        "\n\n【写作系统规则 · WRITING_SYSTEM.md】（规划 idea 时遵守）"
+        "\n- 对话字面留白：只规划能写出的字面台词，不规划旁白式心理剖白，不用情绪定性提示语。"
+        "\n- 禁崩线：女配不雌竞、正宫稳定、主角不越界养鱼、反派不降智、系统不跳阶。"
+        "\n- 感情线守雷 1：涉及独处场景必须来自客观公事（突发事故/既定排班/他人离场），禁止制造人为独处。"
+        "\n- 文风：多闲笔、允许平淡留白、拒绝全程高能；转折必须有前置铺垫；性格变化有事件链。"
+    ) % book_title()
     user = "\n".join([
         "【全书大纲】\n" + outl,
         "",

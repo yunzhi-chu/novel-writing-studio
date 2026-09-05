@@ -31,7 +31,7 @@ WORDS="${3:-3000}"
 [ -f "$HOME/.novel/env" ] && . "$HOME/.novel/env"
 
 # 本地 oMLX 模型配置（与 Sodarie Novel 设置一致）
-export LLM_BASE_URL="http://127.0.0.1:8000/v1"
+export LLM_BASE_URL="${LLM_BASE_URL:-http://127.0.0.1:8000/v1}"
 export LLM_API_KEY="${LLM_API_KEY:-sk-omlx-local}"
 export LLM_MODEL="${LLM_MODEL:-Qwen3.6-35B-A3B-MLX-8bit}"
 

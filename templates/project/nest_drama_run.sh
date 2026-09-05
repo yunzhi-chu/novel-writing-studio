@@ -30,7 +30,7 @@ LOG_FILE="/tmp/nest-drama.log"
 # 本地模型接入（oMLX 启动 Ornith-1.5-35B-A3B-MLX-8bit：Qwen3.5-MoE 架构，
 # 35B 总量/3B 激活，约 65 tok/s，远快于 27B 稠密模型；oMLX 原生遵守
 # chat_template_kwargs.enable_thinking=false，建世界摄取自动关思考）
-export NEST_LLM_BASE_URL="http://127.0.0.1:8000/v1"
+export NEST_LLM_BASE_URL="${NEST_LLM_BASE_URL:-http://127.0.0.1:8000/v1}"
 export NEST_LLM_MODEL="${NEST_LLM_MODEL:-Ornith-1.5-35B-A3B-MLX-8bit}"
 export NEST_LLM_API_KEY="${NEST_LLM_API_KEY:-${LLM_API_KEY:-sk-omlx-local}}"
 # 单次模型调用超时：MoE 模型较快（建世界整体约 5-15 分钟），默认 300s 足够；

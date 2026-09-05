@@ -294,6 +294,7 @@ def revise_chapter(chapter_id: str, target: int, max_rounds: int) -> dict:
             "chapter": chapter_id, "revised": False, "final_score": score_issues(issues),
             "final_issues": issues, "rounds": rounds_log, "target_words": target,
             "word_count": chinese_char_count(original_body),
+            "original_word_count": chinese_char_count(original_body),
             "note": "无 critical/warning 问题，无需修订",
         }
 
