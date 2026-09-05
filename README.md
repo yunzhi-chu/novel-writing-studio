@@ -5,6 +5,24 @@
 
 **全程本地运行，不需要联网 API，不花钱，隐私在自己电脑里。**
 
+## ⏩ 快速开始（新手 3 步）
+
+```bash
+# 1. 下载本项目
+git clone https://github.com/yunzhi-chu/novel-writing-studio.git
+cd novel-writing-studio
+
+# 2. 一键安装（自动检测系统：macOS 芯片用 oMLX，其他用 Ollama）
+bash install.sh        # 完整安装（含下载约 70GB 模型，需 0.5-2 小时）
+
+# 3. 开始写第一章
+cd ~/novel-project
+./write_chapter.sh ch001-标题 "一句话 idea" 3000
+```
+
+> 第一次上手请跟着 **[`GETTING_STARTED.md`](GETTING_STARTED.md)**（从零开始的新故事 Check 清单）一步步打勾。
+> 各系统差异与常见问题见下文。
+
 ---
 
 ## ✨ 它能做什么
