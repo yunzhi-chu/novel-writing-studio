@@ -1,0 +1,26 @@
+# ============================================================
+# 角色档案 - 每个角色一条记录
+# ============================================================
+
+# 字段说明：
+#   role: 角色定位（主角/配角/反派）
+#   identity: 身份、职业、处境
+#   personality: 性格（决定行为方式）
+#   speaking_style: 说话风格
+#   current_status: 当前状态（每章后更新）
+#   secrets: 秘密（只给自己知道的真相）
+#   knows: 知道什么（别人不知道的信息）
+#   relationships: 关系 {对方: 关系描述}
+#   constraints: 行为边界（绝不做什么）
+
+# 示例（复制后改）：
+# protagonist:
+#   role: "主角"
+#   identity: "县城肉铺临时工，离异，带一个女儿"
+#   personality: "嘴硬心软，怕麻烦，逃避型，遇大事先沉默"
+#   speaking_style: "话少、短句、不解释"
+#   current_status: "……"
+#   secrets: ["……"]
+#   knows: []
+#   relationships: {}
+#   constraints: ["……"]

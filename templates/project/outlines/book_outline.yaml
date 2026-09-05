@@ -1,0 +1,31 @@
+# ============================================================
+# 全书大纲 - 方向、主线冲突、分幕结构（新建项目从这里开始填）
+# ============================================================
+
+title: "你的故事标题"
+target_word_count: "8万-12万字"
+genre: "现实 / 悬疑 / 情感 ..."
+core_theme: "一句话主题"
+
+logline: "一句话故事简介"
+
+main_conflict:
+  external: "主角面临的外部困难"
+  internal: "主角的内心矛盾"
+  emotional: "情感线张力"
+
+structure:
+  act1_setup:
+    chapters: "ch001-ch005"
+    function: "建立世界观、主角处境、核心冲突。"
+    key_turning_point: "第一幕转折点"
+
+  act2_confrontation:
+    chapters: "ch006-ch018"
+    function: "冲突升级，秘密逐渐浮出水面。"
+    key_turning_point: "第二幕转折点"
+
+  act3_resolution:
+    chapters: "ch019-ch030"
+    function: "关系修复，生活没有奇迹，主角学会承担。"
+    key_turning_point: "收束"

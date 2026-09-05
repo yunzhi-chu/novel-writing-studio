@@ -1,0 +1,11 @@
+# ============================================================
+# 伏笔台账 - active(埋下未收) / resolved(已回收)
+# ============================================================
+
+# 格式（复制后改）：
+# fs001:
+#   description: "伏笔内容"
+#   planted_at: "ch001"
+#   status: "active"          # active / resolved
+#   related_characters: ["角色名"]
+#   planned_resolution: "计划如何回收"
