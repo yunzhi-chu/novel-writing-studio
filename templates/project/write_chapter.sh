@@ -27,13 +27,26 @@ IDEA="${2}"
 # 默认目标字数：3000 字/章（可用第三个参数覆盖）
 WORDS="${3:-3000}"
 
-# 读取统一配置（install.sh 生成的 ~/.novel/env；可按需修改）
-[ -f "$HOME/.novel/env" ] && . "$HOME/.novel/env"
-
 # 本地 oMLX 模型配置（与 Sodarie Novel 设置一致）
+# 统一配置（~/.novel/env，可按需修改）
+[ -f "$HOME/.novel/env" ] && . "$HOME/.novel/env"
 export LLM_BASE_URL="${LLM_BASE_URL:-http://127.0.0.1:8000/v1}"
 export LLM_API_KEY="${LLM_API_KEY:-sk-omlx-local}"
 export LLM_MODEL="${LLM_MODEL:-Qwen3.6-35B-A3B-MLX-8bit}"
+
+# ---------- 预检模型服务（未就绪自动拉起，与 novel_pipeline 一致） ----------
+OAPI="${LLM_BASE_URL%/v1}"
+echo "[预检] 检查模型服务 ${OAPI} …"
+if ! curl -s -m 5 "${OAPI}/health" >/dev/null 2>&1; then
+  echo "[预检] 模型服务未就绪，尝试自动启动（omlx start）…"
+  command -v omlx >/dev/null 2>&1 && omlx start --timeout 120 >/dev/null 2>&1 || true
+  sleep 3
+fi
+if ! curl -s -m 5 "${OAPI}/health" >/dev/null 2>&1; then
+  echo "[预检] ✗ 模型服务无法启动。请手动打开 oMLX 应用（需加载写作模型 ${LLM_MODEL}）" >&2
+  exit 1
+fi
+echo "[预检] ✓ 模型服务就绪"
 
 echo "[写手] 开始生成章节 ${CHAPTER}，目标 ${WORDS} 字"
 echo "  idea: ${IDEA}"
@@ -78,18 +91,14 @@ echo "[记忆更新] 把 ${CHAPTER} 沉淀进长期记忆..."
 "${NP}/scripts/.venv/bin/python" "${NP}/scripts/update_memory_after_chapter.py" \
     --chapter "${CHAPTER}" 2>&1 | tail -5 || true
 
-# 6) 创作看板自动刷新（可选组件）：4 类图表 + 4 维诊断报告（记忆已更新，图即最新）
-#    未安装看板工具时自动跳过，不影响成章主流程
-if [ -f "${NP}/scripts/novel_studio.py" ]; then
-    echo "[看板] 刷新创作看板..."
-    "${NP}/scripts/.venv/bin/python" "${NP}/scripts/novel_studio.py" 2>&1 | tail -6 || true
-    # 6.5) 自动弹出创作看板总览页（浏览器，仅一页，iframe 嵌 4 图）
-    if [ -f "${NP}/charts/index.html" ]; then
-        open "${NP}/charts/index.html" 2>/dev/null || true
-        echo "[看板] 已在浏览器打开总览页: charts/index.html"
-    fi
-else
-    echo "[看板] （可选）创作看板工具未安装，已跳过"
+# 6) archify 看板自动刷新：4 类图表 + 4 维诊断报告（记忆已更新，图即最新）
+echo "[看板] 自动刷新 archify 创作看板（4 图 + 诊断报告）..."
+"${NP}/scripts/.venv/bin/python" "${NP}/scripts/novel_studio.py" 2>&1 | tail -6 || true
+
+# 6.5) 自动弹出创作看板总览页（浏览器，仅一页，iframe 嵌 4 图）
+if [ -f "${NP}/charts/index.html" ]; then
+    open "${NP}/charts/index.html" 2>/dev/null || true
+    echo "[看板] 已在浏览器打开总览页: charts/index.html"
 fi
 
 # 7) 同步到桌面（方便查看）
