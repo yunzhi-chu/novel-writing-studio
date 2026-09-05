@@ -1,6 +1,6 @@
 # 🖋️ AI 小说写作工作台
 
-[![Download v1.3.0](https://img.shields.io/badge/Download%20v1.3.0-2ea44f?style=for-the-badge&logo=github&logoColor=white)](https://github.com/yunzhi-chu/novel-writing-studio/releases/tag/v1.3.0)
+[![Download v1.3.1](https://img.shields.io/badge/Download%20v1.3.1-2ea44f?style=for-the-badge&logo=github&logoColor=white)](https://github.com/yunzhi-chu/novel-writing-studio/releases/tag/v1.3.1)
 [![Release](https://img.shields.io/github/v/release/yunzhi-chu/novel-writing-studio?style=flat-square&label=最新版本)](https://github.com/yunzhi-chu/novel-writing-studio/releases)
 
 > 一条命令，在你自己电脑上搭起一个「导演 + 写手」的 AI 小说工作室。
@@ -18,11 +18,16 @@ cd novel-writing-studio
 # 2. 一键安装（自动检测系统：macOS 芯片用 oMLX，其他用 Ollama）
 bash install.sh        # 完整安装（含下载约 70GB 模型，需 0.5-2 小时）
 
-# 3. 进入工作台（新手先按 0 走一遍教学模式）
+# 3. 进入创作中心（一键：Sodarie Novel 是主体界面，其余工具围绕它生产）
 cd ~/novel-project
 ./workbench.sh
+
+# 以后任何目录敲 nv 就能进（推荐配置）
+echo 'alias nv="cd ~/novel-project && ./workbench.sh"' >> ~/.zshrc
+source ~/.zshrc
 ```
 
+> **使用姿势**：`./workbench.sh` 后按 **1 打开 Sodarie Novel**（主体，阅读/编辑章节）→ 按 **2 推演+成章**（后台自动生产，写完自动同步进 Sodarie）→ 按 **7 体检**（卡住先跑）。
 > 第一次上手请跟着 **[`GETTING_STARTED.md`](GETTING_STARTED.md)**（从零开始的新故事 Check 清单）一步步打勾。
 > 或在工作台里按 `0` 进入**教学模式**（`./tutor.sh`），6 步从零学会整套流程。
 > 各系统差异与常见问题见下文。
@@ -39,6 +44,7 @@ cd ~/novel-project
 | 换新故事 | 跑 `./new_story.sh` | 交互式建新故事，自动生成世界启动卡（时代/势力/主角表单/知情边界）+ 世界观/人物/大纲骨架 |
 | 怕角色崩、文风 AI 味 | 无需操作 | 写手与导演自动遵守 `WRITING_SYSTEM.md` 铁律：禁崩线、对话字面留白、去 AI 文风十条、守界细则 |
 | 完全没接触过 | 跑 `./workbench.sh` 按 0 | 教学模式 6 步从零讲解：认识工具 → 体检 → 建故事 → 写章 → 看结果 → 毕业清单 |
+| 不知道怎么用整套系统 | `./workbench.sh` 按 1 | **以 Sodarie Novel 为主体**：图形界面读/改章节，推演/写手/审查全后台，写完自动同步进 Sodarie；工作台按「主体/生产/维护」分区管理 |
 
 ## 🖥️ 支持的系统（自动适配，无需手动选）
 

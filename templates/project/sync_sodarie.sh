@@ -11,6 +11,8 @@
 #   ./sync_sodarie.sh          # 重启 GUI，同步所有章节
 #   ./sync_sodarie.sh --skip   # 仅检查 GUI 状态，不重启
 # ============================================================
+# 统一配置（~/.novel/env，可按需修改）
+[ -f "$HOME/.novel/env" ] && . "$HOME/.novel/env"
 set -u
 
 APP_NAME="Sodarie Novel"

@@ -17,6 +17,8 @@
 #
 # 依赖：oMLX(:8000) + nest-drama 引擎(:8790)（novel_pipeline.sh 自动拉起）
 # ============================================================
+# 统一配置（~/.novel/env，可按需修改）
+[ -f "$HOME/.novel/env" ] && . "$HOME/.novel/env"
 set -uo pipefail
 
 NP="$(cd "$(dirname "$0")" && pwd)"
@@ -61,6 +63,10 @@ extract_title() {
     ch[0-9]*) t="${t#*-}" ;;
   esac
   t="$(echo "$t" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')"
+  # 截断到 12 字内（按字符，避免整句 idea 当标题）
+  t="$(printf '%s' "$t" | cut -c1-12)"
+  t="$(echo "$t" | sed -E 's/[，。、！？!?；;：:、[:space:]]+$//')"
+  [ -z "$t" ] && t="无题"
   echo "$t"
 }
 

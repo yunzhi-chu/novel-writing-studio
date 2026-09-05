@@ -18,6 +18,9 @@
 # ============================================================
 set -uo pipefail
 
+# 统一配置（~/.novel/env，可按需修改）
+[ -f "$HOME/.novel/env" ] && . "$HOME/.novel/env"
+
 NP="$(cd "$(dirname "$0")" && pwd)"
 RUN="${NP}/nest_drama_run.sh"
 OAPI="http://127.0.0.1:8000"
