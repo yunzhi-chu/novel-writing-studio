@@ -240,3 +240,13 @@ A：清空 `memory/` 和 `outlines/` 里的内容（用模板重填），或新�
 ---
 
 *遇到问题先看本页，解决不了把终端报错截图给 AI 助手，它能帮你诊断。*
+
+---
+
+## 🙏 致谢开源
+
+本项目（Sodarie Novel 写作流）的能力核心来自开源社区，特别感谢：
+
+- **[DuckTraDo/Novel](https://github.com/DuckTraDo/Novel)**（MIT License · Rust）—— local-first AI 小说写作流水线，结构化故事记忆、场景级上下文、连续性检查等核心能力源于此项目。Sodarie Novel 的章节记忆与连续性机制建立在它的设计之上。
+
+向所有为本地化 AI 创作生态做出贡献的开源作者致敬。
