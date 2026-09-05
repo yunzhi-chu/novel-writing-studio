@@ -21,6 +21,12 @@ is_running() {
     pgrep -f "Sodarie Novel.app/Contents/MacOS" >/dev/null 2>&1
 }
 
+# 未安装 Sodarie 时优雅退出（可选组件，不影响成章主流程）
+if [ ! -d "$APP_PATH" ]; then
+    echo "[Sodarie] （可选）未安装 Sodarie Novel，已跳过 GUI 同步"
+    exit 0
+fi
+
 # 仅检查模式
 if [ "${1:-}" = "--skip" ]; then
     if is_running; then

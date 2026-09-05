@@ -78,14 +78,18 @@ echo "[记忆更新] 把 ${CHAPTER} 沉淀进长期记忆..."
 "${NP}/scripts/.venv/bin/python" "${NP}/scripts/update_memory_after_chapter.py" \
     --chapter "${CHAPTER}" 2>&1 | tail -5 || true
 
-# 6) archify 看板自动刷新：4 类图表 + 4 维诊断报告（记忆已更新，图即最新）
-echo "[看板] 自动刷新 archify 创作看板（4 图 + 诊断报告）..."
-"${NP}/scripts/.venv/bin/python" "${NP}/scripts/novel_studio.py" 2>&1 | tail -6 || true
-
-# 6.5) 自动弹出创作看板总览页（浏览器，仅一页，iframe 嵌 4 图）
-if [ -f "${NP}/charts/index.html" ]; then
-    open "${NP}/charts/index.html" 2>/dev/null || true
-    echo "[看板] 已在浏览器打开总览页: charts/index.html"
+# 6) 创作看板自动刷新（可选组件）：4 类图表 + 4 维诊断报告（记忆已更新，图即最新）
+#    未安装看板工具时自动跳过，不影响成章主流程
+if [ -f "${NP}/scripts/novel_studio.py" ]; then
+    echo "[看板] 刷新创作看板..."
+    "${NP}/scripts/.venv/bin/python" "${NP}/scripts/novel_studio.py" 2>&1 | tail -6 || true
+    # 6.5) 自动弹出创作看板总览页（浏览器，仅一页，iframe 嵌 4 图）
+    if [ -f "${NP}/charts/index.html" ]; then
+        open "${NP}/charts/index.html" 2>/dev/null || true
+        echo "[看板] 已在浏览器打开总览页: charts/index.html"
+    fi
+else
+    echo "[看板] （可选）创作看板工具未安装，已跳过"
 fi
 
 # 7) 同步到桌面（方便查看）

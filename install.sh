@@ -14,6 +14,7 @@
 # 用法：
 #   bash install.sh                 # 完整安装（推荐）
 #   bash install.sh --skip-models   # 跳过模型下载（想用图形界面下载时）
+#   bash install.sh --smoke-test    # 装完立即用写作模型生成一句话验证（首次加载较慢）
 #   bash install.sh --help
 #
 # 需要：64GB+ 内存、约 120GB 磁盘
@@ -27,9 +28,14 @@ NEST_DIR="${NEST_DIR:-$HOME/nest-drama}"
 PROJECT_DIR="${PROJECT_DIR:-$HOME/novel-project}"
 ENV_FILE="$HOME/.novel/env"
 
-SKIP_MODELS=0
-[ "${1:-}" = "--skip-models" ] && SKIP_MODELS=1
-[ "${1:-}" = "--help" ] && { sed -n '1,30p' "$0" | grep '^#' | sed 's/^# \?//'; exit 0; }
+SKIP_MODELS=0; SMOKE=0
+for a in "$@"; do
+  case "$a" in
+    --skip-models) SKIP_MODELS=1;;
+    --smoke-test)  SMOKE=1;;
+    --help) sed -n '1,32p' "$0" | grep '^#' | sed 's/^# \?//'; exit 0;;
+  esac
+done
 
 say()  { echo ""; echo "────────────────────────────────────────────"; echo "▶ $1"; }
 ok()   { echo "  ✓ $1"; }
@@ -50,7 +56,7 @@ case "$UNAME_S" in
   *) OS_OS="Unknown"; OS_ARCH="$(uname -m)";;
 esac
 
-say "步骤 0/8：检查系统（检测到：$OS_OS / $OS_ARCH）"
+say "步骤 0/8：检查系统（检测到：$OS_OS / ${OS_ARCH}）"
 if [ "$OS_OS" = "Windows" ]; then
   die "检测到 Windows 原生环境。请先安装 WSL2（Ubuntu），然后在 WSL 终端里重跑本脚本：\n    wsl --install    （PowerShell 里运行一次，重启后进 Ubuntu）\n    bash install.sh"
 fi
@@ -74,7 +80,7 @@ else
 fi
 
 # ---------- 1. 安装推理后端 ----------
-say "步骤 1/8：安装模型服务（$BACKEND）"
+say "步骤 1/8：安装模型服务（${BACKEND}）"
 if [ "$BACKEND" = "omlx" ]; then
   if command -v brew >/dev/null 2>&1; then ok "brew 已装"; else die "请先安装 Homebrew 后重跑：\n    /bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""; fi
   if command -v omlx >/dev/null 2>&1; then ok "oMLX 已装（$(omlx --version 2>/dev/null | tail -1)）"; else
@@ -84,8 +90,27 @@ if [ "$BACKEND" = "omlx" ]; then
     ok "oMLX 已安装"
   fi
 else
-  if command -v ollama >/dev/null 2>&1; then ok "Ollama 已装（$(ollama --version 2>/dev/null | head -1)）"; else
-    die "未安装 Ollama。请先执行以下命令安装后重跑本脚本：\n    Linux/WSL：curl -fsSL https://ollama.com/install.sh | sh\n    macOS Intel：brew install ollama"
+  if command -v ollama >/dev/null 2>&1; then
+    ok "Ollama 已装（$(ollama --version 2>/dev/null | head -1)）"
+  elif [ -x "$HOME/bin/ollama" ] || [ -x "$HOME/.local/bin/ollama" ]; then
+    export PATH="$HOME/bin:$HOME/.local/bin:$PATH"
+    ok "Ollama 便携版已存在（~/.local/bin 或 ~/bin）"
+  else
+    say "  Ollama 未安装，尝试自动安装便携版（免 sudo）…"
+    mkdir -p "$HOME/bin"
+    if [ "$OS_OS" = "macOS" ]; then
+      curl -fsSL -o /tmp/ollama.tgz "https://ollama.com/download/ollama-darwin.tgz" 2>/dev/null || true
+    else
+      curl -fsSL -o /tmp/ollama.tgz "https://ollama.com/download/ollama-linux-amd64.tgz" 2>/dev/null || true
+    fi
+    if [ -s /tmp/ollama.tgz ]; then
+      tar -xzf /tmp/ollama.tgz -C "$HOME/bin" 2>/dev/null && chmod +x "$HOME/bin/ollama" 2>/dev/null && export PATH="$HOME/bin:$PATH" && ok "Ollama 已装到 ~/bin（免 sudo）"
+    fi
+    if ! command -v ollama >/dev/null 2>&1; then
+      warn "自动安装失败。请手动安装后重跑本脚本："
+      warn "  macOS Intel：brew install ollama"
+      warn "  Linux/WSL：  curl -fsSL https://ollama.com/install.sh | sh"
+    fi
   fi
 fi
 
@@ -132,9 +157,17 @@ print("  ✓ %s 完成" % repo)
 PYEOF
     }
     echo "  ① 推演模型 ornith（约 35GB）…"
-    DL ornith-ai/Ornith-1.5-35B-A3B-MLX-8bit "$MODEL_DIR/ornith-ai/Ornith-1.5-35B-A3B-MLX-8bit" 2>&1 | tail -2 || warn "推演模型下载失败（可重跑 --skip-models 用 oMLX 应用下载）"
+    if [ -f "$MODEL_DIR/ornith-ai/Ornith-1.5-35B-A3B-MLX-8bit/config.json" ]; then
+      ok "推演模型已存在，跳过下载"
+    else
+      DL ornith-ai/Ornith-1.5-35B-A3B-MLX-8bit "$MODEL_DIR/ornith-ai/Ornith-1.5-35B-A3B-MLX-8bit" 2>&1 | tail -2 || warn "推演模型下载失败（可重跑 --skip-models 用 oMLX 应用下载）"
+    fi
     echo "  ② 写作模型 Qwen3.6（约 35GB）…"
-    DL lmstudio-community/Qwen3.6-35B-A3B-MLX-8bit "$MODEL_DIR/lmstudio-community/Qwen3.6-35B-A3B-MLX-8bit" 2>&1 | tail -2 || warn "写作模型下载失败（可重跑 --skip-models 用 oMLX 应用下载）"
+    if [ -f "$MODEL_DIR/lmstudio-community/Qwen3.6-35B-A3B-MLX-8bit/config.json" ]; then
+      ok "写作模型已存在，跳过下载"
+    else
+      DL lmstudio-community/Qwen3.6-35B-A3B-MLX-8bit "$MODEL_DIR/lmstudio-community/Qwen3.6-35B-A3B-MLX-8bit" 2>&1 | tail -2 || warn "写作模型下载失败（可重跑 --skip-models 用 oMLX 应用下载）"
+    fi
   else
     echo "  ① 推演模型 ornith（约 35GB）…"
     ollama pull hf.co/ornith-ai/Ornith-1.5-35B-A3B-GGUF 2>&1 | tail -2 || warn "推演模型下载失败（可重跑 --skip-models 手动 ollama pull）"
@@ -154,7 +187,7 @@ else
 fi
 
 # ---------- 5. 展开小说项目骨架 ----------
-say "步骤 5/8：初始化小说项目（$PROJECT_DIR）"
+say "步骤 5/8：初始化小说项目（${PROJECT_DIR}）"
 if [ -d "$PROJECT_DIR" ]; then
   warn "$PROJECT_DIR 已存在，跳过展开（如需重置请先手动删除）"
 else
@@ -207,16 +240,36 @@ else
   warn "nest-drama 引擎未就绪（等模型就绪后：cd $PROJECT_DIR && ./nest_drama_run.sh status）"
 fi
 
-# ---------- 8. 结束语 ----------
+# ---------- 8. 冒烟测试（可选） ----------
+if [ "$SMOKE" = "1" ]; then
+  say "冒烟测试：用写作模型生成一句话验证（首次加载 35B 模型约 1-3 分钟，请耐心）"
+  WMODEL=$(grep "^LLM_MODEL=" "$ENV_FILE" 2>/dev/null | cut -d'"' -f2)
+  [ -z "$WMODEL" ] && WMODEL="${LLM_MODEL:-}"
+  K=$(grep "^LLM_API_KEY=" "$ENV_FILE" 2>/dev/null | cut -d'"' -f2)
+  [ -z "$K" ] && K="sk-omlx-local"
+  R=$(curl -s -m 300 "http://127.0.0.1:8000/v1/chat/completions" \
+    -H "Content-Type: application/json" -H "Authorization: Bearer $K" \
+    -d "{\"model\":\"$WMODEL\",\"messages\":[{\"role\":\"user\",\"content\":\"只回复两个字：你好\"}],\"max_tokens\":16}" 2>/dev/null)
+  if echo "$R" | grep -q "你好"; then
+    ok "冒烟测试通过：模型已能正常生成 ✓"
+  else
+    warn "冒烟测试未通过（模型仍在加载或未就绪）。稍后跑 ~/novel-project/doctor.sh 复查"
+  fi
+fi
+
+# ---------- 9. 结束语 ----------
 say "完成！"
 echo ""
 echo "============================================================"
 echo " ✅ 安装完成！系统：$OS_OS · 后端：$BACKEND"
 echo ""
+echo "  0. 体检一下（推荐，30 秒）：cd $PROJECT_DIR && ./doctor.sh"
+echo ""
 echo "  1. 写故事设定（3 个填空模板）："
 echo "     $PROJECT_DIR/memory/story_bible.yaml"
 echo "     $PROJECT_DIR/memory/characters.yaml"
 echo "     $PROJECT_DIR/outlines/book_outline.yaml"
+echo "     或用一键初始化：cd $PROJECT_DIR && ./new_story.sh"
 echo ""
 echo "  2. 写第一章（示例）："
 echo "     cd $PROJECT_DIR && ./write_chapter.sh ch001-标题 \"一句话 idea\" 3000"

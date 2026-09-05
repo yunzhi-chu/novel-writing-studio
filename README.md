@@ -108,6 +108,7 @@ bash install.sh
 ## ✍️ 开始写你的第一本书
 
 > **第一次上手？直接跟着 `GETTING_STARTED.md`（从零开始的新故事 Check 清单）一步步打勾就行。**
+> **不想手动填模板？跑 `./new_story.sh`，问答几句自动生成设定。**
 
 ### 1. 告诉系统你的故事设定（只需 3 个文件，都是"填空"模板）
 
@@ -152,9 +153,11 @@ cd ~/novel-project
 ### 其他常用命令
 
 ```bash
-./nest_drama_run.sh status         # 推演引擎状态
-./novel_pipeline.sh 6              # 只跑推演链：同步→建世界→推演→导出故事全录
-./sync_sodarie.sh                  # 手动同步章节到 Sodarie Novel GUI
+./doctor.sh                    # 一键体检：环境/模型/引擎/项目状态 + 修复建议（卡住先跑这个）
+./new_story.sh                 # 一键初始化新故事（问答式：书名/题材/主角 → 自动生成设定）
+./nest_drama_run.sh status     # 推演引擎状态
+./novel_pipeline.sh 6          # 只跑推演链：同步→建世界→推演→导出故事全录
+./sync_sodarie.sh              # 手动同步章节到 Sodarie Novel GUI
 ```
 
 ---
