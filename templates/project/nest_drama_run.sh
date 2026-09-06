@@ -13,9 +13,9 @@
 #   ./nest_drama_run.sh status                    # 查看引擎状态
 #   ./nest_drama_run.sh sync                      # 只同步记忆库 → 材料
 #   ./nest_drama_run.sh build "推演需求"           # 只建世界
-#   ./nest_drama_run.sh simulate [N]              # 只推演 N 轮（默认 6）
+#   ./nest_drama_run.sh simulate [N]              # 只推演 N 轮（默认 4）
 #   ./nest_drama_run.sh export                    # 只导出故事全录
-#   ./nest_drama_run.sh [N] ["推演需求"]           # 全流程（默认 6 轮）
+#   ./nest_drama_run.sh [N] ["推演需求"]           # 全流程（默认 4 轮）
 # ============================================================
 set -uo pipefail
 

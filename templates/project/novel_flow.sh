@@ -7,8 +7,8 @@
 # AGENTS.md 的确认门禁）；--go 全自动一条龙直接成章。
 #
 # 用法：
-#   ./novel_flow.sh                    # 推演(6轮)+提炼idea，停下展示待确认
-#   ./novel_flow.sh 4                  # 推演 4 轮 + 提炼 idea
+#   ./novel_flow.sh                    # 推演(4轮)+提炼idea，停下展示待确认
+#   ./novel_flow.sh 2                  # 推演 2 轮 + 提炼 idea
 #   ./novel_flow.sh --go               # 全自动：推演→提炼idea→直接成章
 #   ./novel_flow.sh --skip-simulate --go   # 跳过推演，用已有全录提炼并成章
 #   ./novel_flow.sh --idea "自定义idea"    # 推演后直接用给定 idea 成章
@@ -25,7 +25,7 @@ NP="$(cd "$(dirname "$0")" && pwd)"
 PY="${NP}/scripts/.venv/bin/python"
 GIDEA="${NP}/scripts/generate_idea.py"
 
-ROUNDS=6
+ROUNDS=4
 GO=0
 FORCE=0
 SKIP_SIM=0

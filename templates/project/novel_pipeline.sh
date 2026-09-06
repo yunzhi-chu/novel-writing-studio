@@ -7,8 +7,8 @@
 # 完成后输出故事全录路径与交接提示（Codex 提炼分镜 → write_chapter.sh 成章）。
 #
 # 用法：
-#   ./novel_pipeline.sh                        # 完整跑一遍（默认 6 轮）
-#   ./novel_pipeline.sh 4                      # 推演 4 轮
+#   ./novel_pipeline.sh                        # 完整跑一遍（默认 4 轮）
+#   ./novel_pipeline.sh 2                      # 推演 2 轮
 #   ./novel_pipeline.sh --force-build          # 强制重建世界（默认已建则跳过）
 #   ./novel_pipeline.sh --requirement "让王二…"  # 自定义建世界/推演需求
 #   ./novel_pipeline.sh --help
@@ -26,7 +26,7 @@ OAPI="http://127.0.0.1:8000"
 NAPI="http://127.0.0.1:8790"
 
 # ---------- 参数 ----------
-ROUNDS=6
+ROUNDS=4
 FORCE_BUILD=0
 REQ=""
 while [ $# -gt 0 ]; do

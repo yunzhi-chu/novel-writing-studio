@@ -13,7 +13,7 @@
 # 用法（由 nest_drama_run.sh 包装调用，用项目 venv 运行）：
 #   python nest_drama_bridge.py --sync                 # 记忆库 → 材料
 #   python nest_drama_bridge.py --build ["需求"]       # 建世界
-#   python nest_drama_bridge.py --simulate [N]         # 推演 N 轮（默认 6）
+#   python nest_drama_bridge.py --simulate [N]         # 推演 N 轮（默认 4）
 #   python nest_drama_bridge.py --export               # 导出故事全录
 #   python nest_drama_bridge.py --run [N] ["需求"]     # 全流程：sync→build→simulate→export
 #   python nest_drama_bridge.py --status               # 引擎/世界/进度状态
@@ -58,7 +58,7 @@ STAGE_DIR = NEST_DIR / "材料"
 
 
 def log(msg):
-    print("[nest-drama桥] %s" % msg, flush=True)
+    print("[nest-drama桥 %s] %s" % (datetime.now().strftime("%H:%M:%S"), msg), flush=True)
 
 
 # ---------- 记忆库 → 材料 ----------
@@ -318,12 +318,19 @@ def build_world(requirement=""):
 
 
 def simulate(rounds=6):
+    # 基准轮：引擎 round 是全局累计（"可随时续跑"），用户要的 N 轮 = 从当前基准续跑 N 轮
+    try:
+        base_rnd = int(_req("GET", "/api/health", timeout=30).get("round", 0) or 0)
+    except Exception as e:
+        base_rnd = 0
+        log("读取基准轮次失败（%s），按 round=0 计" % e)
     try:
         r = _req("POST", "/api/simulation/start", data={"max_rounds": rounds}, timeout=60)
     except Exception as e:
         log("启动推演失败：%s" % e)
         return False
-    log("推演已启动（目标 %d 轮）：%s" % (rounds, r))
+    log("推演已启动（目标 %d 轮，从第 %d 轮续跑，预计止于第 %d 轮）：%s"
+        % (rounds, base_rnd + 1, base_rnd + rounds, r.get("data") if isinstance(r, dict) else r))
     # 轮询：running=false 且 round>0 视为收束/结束
     deadline = time.time() + 7200
     last_round = 0
@@ -342,7 +349,17 @@ def simulate(rounds=6):
             else:
                 stall += 1
             if not running and rnd > 0:
-                log("推演结束：共 %d 轮" % rnd)
+                log("推演结束：共 %d 轮（本轮 %d 轮）" % (rnd, rnd - base_rnd))
+                return True
+            if rnd >= base_rnd + rounds:
+                # 保险丝：引擎未自停（自停通常先触发上面分支），主动停，避免多跑
+                log("已达目标 %d 轮（round=%d 停止线 %d），主动停止…"
+                    % (rounds, rnd, base_rnd + rounds))
+                try:
+                    _req("POST", "/api/simulation/stop", data={}, timeout=30)
+                except Exception:
+                    pass
+                time.sleep(20)
                 return True
             if not running and rnd == 0 and stall > 2:
                 log("推演未产出轮次（可能未收束或无剧本），请人工查看：%s" % h)
@@ -422,9 +439,9 @@ def main():
     ap = argparse.ArgumentParser(description="NEST-DRAMA × Sodarie 写作流桥接")
     ap.add_argument("--sync", action="store_true", help="记忆库 → 材料")
     ap.add_argument("--build", nargs="?", const="", help="建世界（可带推演需求）")
-    ap.add_argument("--simulate", nargs="?", const=6, type=int, help="推演 N 轮（默认 6）")
+    ap.add_argument("--simulate", nargs="?", const=4, type=int, help="推演 N 轮（默认 4）")
     ap.add_argument("--export", action="store_true", help="导出故事全录")
-    ap.add_argument("--run", nargs="?", const=6, type=int, help="全流程，N 轮（默认 6）")
+    ap.add_argument("--run", nargs="?", const=4, type=int, help="全流程，N 轮（默认 4）")
     ap.add_argument("--requirement", default="", help="推演需求（可选）")
     ap.add_argument("--status", action="store_true", help="状态")
     a = ap.parse_args()
