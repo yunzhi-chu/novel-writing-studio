@@ -71,7 +71,10 @@ EXTRACTION_PROMPT_TEMPLATE = """你是一位专业的小说编辑助手。请阅
       "description": "描述",
       "related_characters": ["角色名"],
       "planned_resolution": "计划回收方式",
-      "status": "active/resolved"
+      "status": "active/resolved",
+      "reader_knowledge": "到本章为止读者已经看到了什么（为什么/信息已披露多少；有则填）",
+      "character_knowledge": ["已知真相的角色名（不是所有在场角色都知情）"],
+      "reveal_plan": {{"target_chapter": "计划揭示章（如 ch915，不知道则留空）", "required_hints": ["揭示前读者必须看到的暗示"]}}
     }}
   ],
   "relationship_updates": [
@@ -257,6 +260,10 @@ def update_foreshadowing(updates: list):
                 "description": update.get("description", ""),
                 "related_characters": update.get("related_characters", []),
                 "planned_resolution": update.get("planned_resolution", ""),
+                # 双重知识账本（借鉴 NovelGenerator）：读者/角色分别知道什么 + 揭示调度
+                "reader_knowledge": update.get("reader_knowledge", ""),
+                "character_knowledge": update.get("character_knowledge", []),
+                "reveal_plan": update.get("reveal_plan", {}),
                 "status": "active",
             })
             print(f"[伏笔] 新增: {fs_id}")
@@ -273,6 +280,12 @@ def update_foreshadowing(updates: list):
                     active[idx]["description"] = update["description"]
                 if update.get("planned_resolution"):
                     active[idx]["planned_resolution"] = update["planned_resolution"]
+                if update.get("reader_knowledge"):
+                    active[idx]["reader_knowledge"] = update["reader_knowledge"]
+                if update.get("character_knowledge"):
+                    active[idx]["character_knowledge"] = update["character_knowledge"]
+                if update.get("reveal_plan"):
+                    active[idx]["reveal_plan"] = update["reveal_plan"]
                 print(f"[伏笔] 更新: {fs_id}")
 
     fs_data["active"] = active

@@ -18,6 +18,7 @@ revise_chapter.py —— 审查不通过自动修订闭环（仿 inkos 修订循
 """
 
 import argparse
+import difflib
 import json
 import re
 import sys
@@ -138,6 +139,53 @@ def split_sentences(text: str) -> list[str]:
 
 
 SENT_END = "。！？…"
+
+
+def find_recent_chapters(chapter_id: str, n: int = 2) -> list[str]:
+    """读当前章之前的最近 n 章全文（按 ch 编号）。"""
+    root = get_project_root()
+    cur = None
+    m = re.match(r"ch(\d+)", chapter_id)
+    if m:
+        cur = int(m.group(1))
+    dirs = []
+    for d in (root / "chapters").glob("ch*"):
+        m2 = re.match(r"ch(\d+)", d.name)
+        if not m2 or not d.is_dir() or (cur is not None and int(m2.group(1)) >= cur):
+            continue
+        dirs.append((int(m2.group(1)), d))
+    texts = []
+    for _, d in sorted(dirs, reverse=True)[:n]:
+        fp = d / "chapter.md"
+        if fp.exists():
+            texts.append(read_text(fp))
+    return texts
+
+
+def detect_repetition(body: str, recent_texts: list[str]) -> list[dict]:
+    """零成本机械检测：新章句子与近 n 章完全重复/高度相似句（借鉴 NovelGenerator 重复检查）。"""
+    issues = []
+    recent_sents = set()
+    for t in recent_texts:
+        for s in split_sentences(t):
+            s = s.strip()
+            if len(s) >= 12:
+                recent_sents.add(s)
+    seen = set()
+    for s in split_sentences(body):
+        s = s.strip()
+        if len(s) < 12 or s in seen:
+            continue
+        seen.add(s)
+        if s in recent_sents:
+            issues.append({
+                "severity": "warning",
+                "dimension": "repetition.cross-chapter",
+                "location": "前文重复",
+                "description": f"与前文句子完全重复：{s[:40]}…",
+                "suggestion": "改写该句，避免与前文逐字重复",
+            })
+    return issues[:5]
 
 
 def expand_to_sentence(body: str, pos: int) -> str:
@@ -280,6 +328,7 @@ def revise_chapter(chapter_id: str, target: int, max_rounds: int) -> dict:
     original_body = check_post_write.strip_frontmatter_and_outline(original)
 
     issues = review_body(original_body, target)
+    issues += detect_repetition(original_body, find_recent_chapters(chapter_id, 2))
     patterns = triggered_patterns(issues)
     actionable = [i for i in issues if i["severity"] in ("critical", "warning")]
 

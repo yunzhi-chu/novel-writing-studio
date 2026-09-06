@@ -71,6 +71,15 @@ def read_tail(path, tail_chars):
     return txt[-tail_chars:]
 
 
+def read_segment(path, size, start=0):
+    """读全录任意一段：start>0 时从第 start 字符起取 size 字符（--from 多章复用）。"""
+    txt = path.read_text(encoding="utf-8")
+    if start <= 0:
+        return txt[-size:] if len(txt) > size else txt
+    end = start + size
+    return txt[start:end]
+
+
 def book_title() -> str:
     """从 story_bible 读书名（无则回退到大纲标题，再回退通用名）。"""
     for p in (NP / "memory" / "story_bible.yaml", NP / "outlines" / "book_outline.yaml"):
@@ -156,6 +165,8 @@ IDEA_FORMAT = """分镜式 idea 的写法（导演视角，像拍电影一样规
 要求：
 - 只写画面、动作、调度、节奏、声音，不要写"机位/镜头术语"
 - 场景单元 2-4 个，每个要点一句话
+- 每场景只规划 1 个核心动作（其余动作以调度/声音带过），动作要有结束状态
+- 一个 idea = 一章：章内剧情必须在本章内落地（有结束状态），不要设计跨章事件
 - 与故事全录最新进展紧密衔接（延续刚推演出的剧情）
 - 符合本书文风与人物性格，不偏离既有伏笔与禁忌
 - 输出第一行写标题：【标题】一句话标题（简短、与内容对应）；不要自行编写 chXXX 章节编号（由系统分配）"""
@@ -165,6 +176,10 @@ def main():
     global MODEL
     ap = argparse.ArgumentParser()
     ap.add_argument("--tail", type=int, default=30000)
+    ap.add_argument("--from", dest="start", type=int, default=0,
+                    help="从全录第 N 字符开始取段（配合 --tail；0=取末尾，多章复用同一全录时按位置取连续片段）")
+    ap.add_argument("--chapter-id", default="",
+                    help="强制章节编号（如 ch912；--chapters 多章联产时避免每章都建议同一编号）")
     ap.add_argument("--model", default=MODEL)
     args = ap.parse_args()
     MODEL = args.model
@@ -174,10 +189,10 @@ def main():
         return 1
     log("故事全录：%s" % drama.name)
 
-    tail_txt = read_tail(drama, args.tail)
+    tail_txt = read_segment(drama, args.tail, args.start)
     outl = outline_ctx()
     chrs = chars_ctx()
-    cid = next_chapter_id()
+    cid = args.chapter_id or next_chapter_id()
     log("模型：%s｜建议章节 ID：%s-标题（可改）" % (MODEL, cid))
 
     system = (

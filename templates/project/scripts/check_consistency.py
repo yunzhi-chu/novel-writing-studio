@@ -33,7 +33,7 @@ CONSISTENCY_CHECK_PROMPT = """你是一位经验丰富的小说编辑，专门�
 2. **信息超前**: 角色是否知道了他们不应该知道的信息？（参考 knows 和 secrets 字段）
 3. **世界观冲突**: 正文中是否违反了 Story Bible 中的世界观规则？
 4. **时间线矛盾**: 事件的时间顺序是否有矛盾？
-5. **伏笔问题**: 伏笔是否遗漏、误回收、过早揭示或互相冲突？
+5. **伏笔问题**: 伏笔是否遗漏、误回收、过早揭示或互相冲突？优先对照伏笔账本的 reader_knowledge（读者已知）与 character_knowledge（角色已知，不等同"在场"）：若角色不知道真相却表现出知情，或读者尚未收到必要暗示而真相突然揭示，均为问题
 6. **重复事件**: 是否重复前文已发生的同一事件？
 7. **重复任务/奖励/发现**: 是否重复触发同一任务，重复发放同一奖励，或重复发现同一信息？
 8. **关键事实漂移**: 年龄、天气、地点、金额、物品、身份、任务状态等是否前后改变？
@@ -46,6 +46,14 @@ CONSISTENCY_CHECK_PROMPT = """你是一位经验丰富的小说编辑，专门�
     - 节奏是否单调（通篇短句或通篇长句，没有快切/缓推的起伏）？
     - 叙述距离是否一成不变（一直特写或一直远景，没有景别变化）？
     - 章末是否把话说尽、强行总结，没有"画面钩子"（停在某个可拍摄的画面/声音上）？
+
+## 前情窗口（三层上下文）
+
+【近 2 章全文】
+{recent_chapters_text}
+
+【更早章节摘要】
+{older_summaries_text}
 
 ## 章节正文
 
@@ -137,6 +145,43 @@ def build_check_data(chapter_id: str) -> dict:
     events = read_jsonl(root / "memory" / "events.jsonl")
     timeline = read_jsonl(root / "memory" / "timeline.jsonl")
 
+    # 三层上下文窗口（借鉴 Writing-Factory）：近 2 章全文 + 更早章节摘要
+    recent, older_summaries = [], []
+    summaries = {}
+    sp = root / "memory" / "chapter_summaries.jsonl"
+    if sp.exists():
+        for ln in sp.read_text(encoding="utf-8").splitlines():
+            ln = ln.strip()
+            if ln.startswith("{"):
+                try:
+                    o = json.loads(ln)
+                    m = re.match(r"ch(\d+)", str(o.get("chapter_id", "")))
+                    if m:
+                        summaries[int(m.group(1))] = o.get("chapter_summary", "")
+                except Exception:
+                    pass
+    cur_num = None
+    mc = re.match(r"ch(\d+)", chapter_id)
+    if mc:
+        cur_num = int(mc.group(1))
+    for d in sorted((root / "chapters").glob("ch*"), key=lambda p: (int(re.match(r"ch(\d+)", p.name).group(1)) if re.match(r"ch(\d+)", p.name) else -1)):
+        if not d.is_dir():
+            continue
+        m = re.match(r"ch(\d+)", d.name)
+        if not m or (cur_num is not None and int(m.group(1)) >= cur_num):
+            continue
+        n = int(m.group(1))
+        fp = d / "chapter.md"
+        ftxt = read_text(fp).strip() if fp.exists() else ""
+        if ftxt and len(recent) < 2:
+            recent.append((n, ftxt))
+        elif n in summaries and summaries[n]:
+            older_summaries.append("Ch.%d: %s" % (n, summaries[n]))
+    recent_chapters_text = ("\n\n" + "\n\n".join(
+        "【Ch.%d 全文】\n%s" % (n, t) for n, t in recent
+    )) if recent else "（无更早章节全文）"
+    older_summaries_text = ("\n".join(older_summaries[-15:])) if older_summaries else "（无摘要）"
+
     return {
         "chapter_text": chapter_text,
         "chapter_idea": load_chapter_idea(chapter_id),
@@ -145,6 +190,8 @@ def build_check_data(chapter_id: str) -> dict:
         "foreshadowing": foreshadowing,
         "recent_events": events[-20:],
         "recent_timeline": timeline[-20:],
+        "recent_chapters_text": recent_chapters_text,
+        "older_summaries_text": older_summaries_text,
     }
 
 
@@ -180,6 +227,8 @@ def run_consistency_check(chapter_id: str) -> str:
         foreshadowing_text=foreshadowing_text,
         events_text=events_text,
         timeline_text=timeline_text,
+        recent_chapters_text=data["recent_chapters_text"],
+        older_summaries_text=data["older_summaries_text"],
     )
 
     messages = [
