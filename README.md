@@ -1,6 +1,6 @@
 # 🖋️ AI 小说写作工作台
 
-[![Download v1.3.6](https://img.shields.io/badge/Download%20v1.3.6-2ea44f?style=for-the-badge&logo=github&logoColor=white)](https://github.com/yunzhi-chu/novel-writing-studio/releases/tag/v1.3.6)
+[![Download v1.3.7](https://img.shields.io/badge/Download%20v1.3.7-2ea44f?style=for-the-badge&logo=github&logoColor=white)](https://github.com/yunzhi-chu/novel-writing-studio/releases/tag/v1.3.7)
 [![Release](https://img.shields.io/github/v/release/yunzhi-chu/novel-writing-studio?style=flat-square&label=最新版本)](https://github.com/yunzhi-chu/novel-writing-studio/releases)
 
 > 一条命令，在你自己电脑上搭起一个「导演 + 写手」的 AI 小说工作室。

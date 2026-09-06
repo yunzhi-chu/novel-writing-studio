@@ -56,6 +56,46 @@ status_view() {
   echo "  └─────────────────────────────────────"
 }
 
+# ---------- 下一步建议（工作台状态机） ----------
+next_steps() {
+  echo ""
+  echo "  ▶ 下一步建议："
+  while IFS= read -r NEW_IDEAS; do break; done < <(ls -dt "$NP"/outputs/ideas/*/ 2>/dev/null | head -1)
+  NEW_IDEAS="${NEW_IDEAS:-}" 
+  if [ -n "${NEW_IDEAS}" ]; then
+    N=$(ls "${NEW_IDEAS}"*.md 2>/dev/null | wc -l | tr -d ' ')
+    DONE=0
+    for f in "${NEW_IDEAS}"*.md; do
+      [ -f "$f" ] || continue
+      CH="$(basename "$f" .md | sed -E 's/-.*//')"
+      ls "$NP"/chapters/${CH}-* >/dev/null 2>&1 && DONE=$((DONE + 1))
+    done
+    if [ "$DONE" -lt "$N" ]; then
+      printf "  ● 有 %s 个分镜待成章（已写 %s/%s）→ ./workbench.sh flow --go --skip-simulate --chapters %s\n" "$N" "$DONE" "$N" "$N"
+    else
+      LATEST=$(ls -t "$NP"/outputs/drama/*.md 2>/dev/null | head -1)
+      AGE=$(( $(date +%s) - $(stat -f "%m" "$LATEST") ))
+      if [ "$AGE" -lt 86400 ]; then
+        printf "  ○ 上一炉 %s 章已写完，全录仍新鲜 → 再联产一炉: ./workbench.sh flow --skip-simulate --chapters 3；或推演下一场: ./workbench.sh flow --go\n" "$N"
+      else
+        printf "  ○ 上一炉已写完，全录已旧 → ./workbench.sh flow（推演下一场）\n"
+      fi
+    fi
+  else
+    LATEST=$(ls -t "$NP"/outputs/drama/*.md 2>/dev/null | head -1)
+    if [ -n "${LATEST}" ]; then
+      AGE=$(( $(date +%s) - $(stat -f "%m" "$LATEST") ))
+      if [ "$AGE" -lt 86400 ]; then
+        printf "  ● 有新鲜故事全录 → ./workbench.sh flow --skip-simulate --chapters 3（联产 3 个分镜）\n"
+      else
+        printf "  ○ 全录较旧（>24h）→ ./workbench.sh flow（推演 4 轮 + 联产 3 分镜，约 45 分钟）\n"
+      fi
+    else
+      printf "  ○ 尚无故事全录 → 先 ./workbench.sh flow（推演一次）\n"
+    fi
+  fi
+}
+
 precheck_omlx() {
   if ! svc "$OAPI/health"; then
     echo "  oMLX 未就绪，尝试自动启动（omlx start）…"
@@ -89,6 +129,16 @@ run_factory()  { run_script novel_factory.sh; }
 run_sync()     { run_script sync_sodarie.sh; }
 run_engine()   { run_script nest_drama_run.sh; }
 run_board()    { open "$NP/charts/index.html" 2>/dev/null || echo "看板不存在，先跑一次写章/推演生成"; }
+run_history()  { run_script history.sh; }
+run_bg() {
+  # 后台跑一条龙：nohup + 日志落 outputs/logs/，状态页可见
+  mkdir -p "$NP/outputs/logs"
+  TS="$(date +%Y%m%d-%H%M%S)"
+  LOG="$NP/outputs/logs/flow-$TS.log"
+  echo "  后台启动 novel_flow.sh（日志: outputs/logs/flow-$TS.log）"
+  echo "  查看进度: ./workbench.sh history"
+  ( { time "$NP/novel_flow.sh" "$@" > "$LOG" 2>&1; echo "EXIT=$?"; } & ) 2>/dev/null
+}
 
 # ---------- 菜单 ----------
 menu() {
@@ -109,6 +159,8 @@ menu() {
   echo "   8. 推演引擎管理        nest_drama_run.sh"
   echo "   9. 短篇工厂            novel_factory.sh"
   echo "   0. 教学模式            tutor.sh           （新手从零入门）"
+  echo "   h. 生产历史            history.sh         （章节/报告/分镜/任务）"
+  echo "   b. 后台跑一条龙        日志落 outputs/logs/"
   echo "   r. 规则文档            WRITING_SYSTEM / WORLD_START_CARD"
   echo "   s. 状态                status"
   echo "   q. 退出"
@@ -127,6 +179,10 @@ case "${1:-}" in
   sync)     run_sync; exit $? ;;
   engine)   run_engine; exit $? ;;
   board)    run_board; exit $? ;;
+  history|h) run_history; exit $? ;;
+  next)     precheck_omlx; status_view; next_steps; exit 0 ;;
+  daily)    precheck_omlx; status_view; next_steps; run_history; exit 0 ;;
+  bg|b)     shift 2>/dev/null; run_bg "$@"; exit $? ;;
   status)   status_view; exit 0 ;;
   "")       ;;  # 进入交互菜单
   *)
@@ -138,6 +194,7 @@ esac
 say "欢迎回到写作工作台"
 precheck_omlx
 status_view
+next_steps
 while true; do
   menu
   printf "  请选择 > "
@@ -153,8 +210,10 @@ while true; do
     8) run_engine ;;
     9) run_factory ;;
     0) run_tutor ;;
+    h|H) run_history ;;
+    b|B) run_bg ;;
     r|R) open "$NP/WRITING_SYSTEM.md" 2>/dev/null; open "$NP/WORLD_START_CARD.md" 2>/dev/null; echo "  已打开规则文档" ;;
-    s|S) status_view ;;
+    s|S) status_view; next_steps ;;
     q|Q) echo "  再见 👋"; exit 0 ;;
     *) echo "  无效选项：$CHOICE" ;;
   esac
